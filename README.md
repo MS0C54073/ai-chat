@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## AI Chat (Next.js + Bun + SQLite)
 
-## Getting Started
+### Setup
 
-First, run the development server:
+- Install dependencies: `bun install`
+- Add a sample workbook:
+  - `mkdir data`
+  - place `example.xlsx` at `./data/example.xlsx`
+- Set your API key: `OPENAI_API_KEY=...`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Bun Commands
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `bun dev` run the dev server
+- `bun run build` build for production
+- `bun start` start the production server
+- `bun lint` lint
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### DB Initialization
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- SQLite initializes automatically on first request.
+- Default DB path: `./data/app.db` (override with `SQLITE_PATH`).
 
-## Learn More
+### XLSX Location
 
-To learn more about Next.js, take a look at the following resources:
+- The XLSX tools read/write `./data/example.xlsx`.
+- The app will error if the file is missing.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Limitations
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- No auth or multi-user isolation.
+- XLSX updates are direct file writes (single-writer expected).
+- Table modal uses sample data (wire to real XLSX preview as needed).
 
-## Deploy on Vercel
+### Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- App runs on Next.js App Router with Bun SQLite.
