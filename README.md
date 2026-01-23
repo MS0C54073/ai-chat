@@ -62,6 +62,7 @@ A simplified ChatGPT-like interface with conversation threads, message persisten
 - Edit prompts and regenerate response (deletes later messages).
 - Delete prompts/responses with confirmation modal.
 - File uploads with context injection.
+- Playwright e2e test (smoke test for UI load).
 
 **Partially implemented**
 - Generative UI tool rendering (confirm card is wired; other tool UIs are basic).
@@ -72,6 +73,7 @@ A simplified ChatGPT-like interface with conversation threads, message persisten
 - XLSX updates are direct file writes (single-writer expected).
 - Tooling is enabled only when prompts include `@Sheet!A1:B3` range references.
 - File uploads are text-only for context (binary files ignored).
+- E2E coverage is minimal (smoke only).
 
 ### Evaluation Criteria Notes
 
@@ -80,7 +82,7 @@ A simplified ChatGPT-like interface with conversation threads, message persisten
 - XLSX read/write + modal + mentions: partially implemented.
 - Code structure and typing: separated API/DB/UI layers with typed models.
 - UI/UX: minimal but functional.
-- Bonus e2e tests: not included.
+- Bonus e2e tests: basic Playwright smoke test included.
 
 ### Requirement Mapping
 
