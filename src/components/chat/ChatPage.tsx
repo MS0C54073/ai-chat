@@ -25,6 +25,7 @@ type ChatThreadProps = {
   threadId: string;
   initialMessages: AiMessage[];
   onLocalMessageUpdate?: (updater: (prev: MessageRecord[]) => MessageRecord[]) => void;
+  messageRecords?: MessageRecord[];
 };
 
 type UploadedFile = {
@@ -33,7 +34,12 @@ type UploadedFile = {
   mime_type: string;
 };
 
-function ChatThread({ threadId, initialMessages, onLocalMessageUpdate }: ChatThreadProps) {
+function ChatThread({
+  threadId,
+  initialMessages,
+  onLocalMessageUpdate,
+  messageRecords = [],
+}: ChatThreadProps) {
   // Extract the visible text from streamed or persisted messages.
   const getMessageText = (message: AiMessage) => {
     if ("content" in message && typeof message.content === "string") {
@@ -110,6 +116,7 @@ function ChatThread({ threadId, initialMessages, onLocalMessageUpdate }: ChatThr
       return;
     }
     const editedId = editingMessage.id;
+    const editedRecord = messageRecords.find((message) => message.id === editedId);
     const response = await fetch(`/api/threads/${threadId}/messages`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -123,22 +130,11 @@ function ChatThread({ threadId, initialMessages, onLocalMessageUpdate }: ChatThr
       return;
     }
 
-    const assistantToDelete = (() => {
-      const index = messages.findIndex((message) => message.id === editedId);
-      if (index === -1) {
-        return null;
-      }
-      return (
-        messages.slice(index + 1).find((message) => message.role === "assistant") ??
-        null
-      );
-    })();
-
-    if (assistantToDelete) {
+    if (editedRecord) {
       await fetch(`/api/threads/${threadId}/messages`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: assistantToDelete.id }),
+        body: JSON.stringify({ afterId: editedRecord.id }),
       });
     }
 
@@ -151,27 +147,27 @@ function ChatThread({ threadId, initialMessages, onLocalMessageUpdate }: ChatThr
               : message
           )
           .filter((message) =>
-            assistantToDelete ? message.id !== assistantToDelete.id : true
+            editedRecord ? message.created_at <= editedRecord.created_at : true
           )
       );
     }
 
-    setMessages((prev) =>
-      prev
-        .map((message) => {
-          if (message.id !== editedId) {
-            return message;
-          }
-          return {
-            ...message,
-            content: editingMessage.content,
-            parts: [{ type: "text" as const, text: editingMessage.content }],
-          };
-        })
-        .filter((message) =>
-          assistantToDelete ? message.id !== assistantToDelete.id : true
-        )
-    );
+    setMessages((prev) => {
+      const index = prev.findIndex((message) => message.id === editedId);
+      if (index === -1) {
+        return prev;
+      }
+      const updated = prev.slice(0, index + 1).map((message) =>
+        message.id === editedId
+          ? {
+              ...message,
+              content: editingMessage.content,
+              parts: [{ type: "text" as const, text: editingMessage.content }],
+            }
+          : message
+      );
+      return updated;
+    });
 
     setEditingMessage(null);
     await reload();
@@ -701,6 +697,7 @@ export default function () {
                 threadId={activeThreadId}
                 initialMessages={initialMessages}
                 onLocalMessageUpdate={setThreadMessages}
+                messageRecords={threadMessages}
               />
             )}
           </div>

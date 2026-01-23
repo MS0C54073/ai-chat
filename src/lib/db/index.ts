@@ -68,6 +68,8 @@ type Statements = {
   getUpload: DbStatement | null;
   updateMessage: DbStatement | null;
   deleteMessage: DbStatement | null;
+  getMessage: DbStatement | null;
+  deleteMessagesAfter: DbStatement | null;
 };
 
 const statements: Statements = {
@@ -80,6 +82,8 @@ const statements: Statements = {
   getUpload: null,
   updateMessage: null,
   deleteMessage: null,
+  getMessage: null,
+  deleteMessagesAfter: null,
 };
 
 function getStatements() {
@@ -134,6 +138,18 @@ function getStatements() {
 
   if (!statements.deleteMessage) {
     statements.deleteMessage = db.prepare("DELETE FROM messages WHERE id = ?");
+  }
+
+  if (!statements.getMessage) {
+    statements.getMessage = db.prepare(
+      "SELECT id, thread_id, role, content, created_at FROM messages WHERE id = ?"
+    );
+  }
+
+  if (!statements.deleteMessagesAfter) {
+    statements.deleteMessagesAfter = db.prepare(
+      "DELETE FROM messages WHERE thread_id = ? AND created_at > ?"
+    );
   }
 
   return statements;
@@ -212,6 +228,19 @@ export async function updateMessage(
 export async function deleteMessage(messageId: string): Promise<void> {
   const { deleteMessage: deleteMessageStatement } = getStatements();
   deleteMessageStatement?.run(messageId);
+}
+
+export async function getMessageById(id: string): Promise<Message | null> {
+  const { getMessage } = getStatements();
+  return (getMessage?.get(id) as Message | undefined) ?? null;
+}
+
+export async function deleteMessagesAfter(
+  threadId: string,
+  createdAt: number
+): Promise<void> {
+  const { deleteMessagesAfter: deleteMessagesAfterStatement } = getStatements();
+  deleteMessagesAfterStatement?.run(threadId, createdAt);
 }
 
 export async function saveUpload(input: SaveUploadInput): Promise<Upload> {
