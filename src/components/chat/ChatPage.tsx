@@ -658,7 +658,7 @@ export default function () {
   return (
     <div className="relative flex h-screen bg-gray-950 text-gray-100">
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="select-none text-[180px] font-bold tracking-tight text-white/5 sm:text-[260px] lg:text-[320px]">
+        <div className="select-none text-[150px] font-bold tracking-tight text-white/5 sm:text-[220px] lg:text-[280px]">
           muzoGPT
         </div>
       </div>

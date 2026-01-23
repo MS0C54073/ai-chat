@@ -30,6 +30,11 @@ A simplified ChatGPT-like interface with conversation threads, message persisten
 - `bun run build` build for production
 - `bun start` start the production server
 - `bun lint` lint
+- `bun test:e2e` run Playwright e2e tests
+
+### Playwright Setup
+
+- Install browsers once: `bunx playwright install`
 
 ### Database Initialization
 
