@@ -2,7 +2,7 @@
 
 ### What This Program Is
 
-A simplified ChatGPT-like interface with conversation threads, message persistence, and Generative UI tools. It includes a sidebar for thread history, a streaming chat area, confirmation UI for destructive actions, and basic XLSX tooling with range mentions.
+A simplified ChatGPT-like interface with conversation threads, message persistence, and Generative UI tools. It includes a sidebar for thread history, a streaming chat area, confirmation UI for destructive actions, XLSX tooling with range mentions, and optional file uploads for context.
 
 ### Tech Stack
 
@@ -20,6 +20,7 @@ A simplified ChatGPT-like interface with conversation threads, message persisten
 - Add the sample workbook:
   - `mkdir data`
   - place `example.xlsx` at `./data/example.xlsx`
+- (Optional) Uploads folder is created automatically at `./data/uploads`
 - Set your API key in `./.env.local`:
   - `OPENAI_API_KEY=...`
 
@@ -40,6 +41,12 @@ A simplified ChatGPT-like interface with conversation threads, message persisten
 - XLSX tools read/write `./data/example.xlsx`.
 - The app will error if the file is missing.
 
+### Uploads
+
+- Files uploaded in the UI are stored in `./data/uploads`.
+- Only text/CSV/JSON contents are injected into the model context (first ~5k chars).
+- Max file size: 5MB.
+
 ### Status
 
 **Fully implemented**
@@ -47,6 +54,9 @@ A simplified ChatGPT-like interface with conversation threads, message persisten
 - Streaming responses via `/api/chat`.
 - Thread creation, switching, and deletion.
 - XLSX tools: `getRange`, `updateCell` (confirmation-gated), `explainFormula`.
+- Edit prompts and regenerate response (deletes later messages).
+- Delete prompts/responses with confirmation modal.
+- File uploads with context injection.
 
 **Partially implemented**
 - Generative UI tool rendering (confirm card is wired; other tool UIs are basic).
@@ -56,6 +66,7 @@ A simplified ChatGPT-like interface with conversation threads, message persisten
 - No auth or multi-user isolation.
 - XLSX updates are direct file writes (single-writer expected).
 - Tooling is enabled only when prompts include `@Sheet!A1:B3` range references.
+- File uploads are text-only for context (binary files ignored).
 
 ### Evaluation Criteria Notes
 
