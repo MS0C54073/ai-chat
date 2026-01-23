@@ -59,6 +59,8 @@ function ChatThread({ threadId, initialMessages, onLocalMessageUpdate }: ChatThr
     addToolResult,
     setInput,
     append,
+    setMessages,
+    reload,
   } = useChat({
     api: "/api/chat",
     body: { threadId, fileIds: attachedFiles.map((file) => file.id) },
@@ -107,24 +109,72 @@ function ChatThread({ threadId, initialMessages, onLocalMessageUpdate }: ChatThr
     if (!editingMessage) {
       return;
     }
+    const editedId = editingMessage.id;
     const response = await fetch(`/api/threads/${threadId}/messages`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: editingMessage.id,
+        id: editedId,
         content: editingMessage.content,
       }),
     });
-    if (response.ok && onLocalMessageUpdate) {
+    if (!response.ok) {
+      setEditingMessage(null);
+      return;
+    }
+
+    const assistantToDelete = (() => {
+      const index = messages.findIndex((message) => message.id === editedId);
+      if (index === -1) {
+        return null;
+      }
+      return (
+        messages.slice(index + 1).find((message) => message.role === "assistant") ??
+        null
+      );
+    })();
+
+    if (assistantToDelete) {
+      await fetch(`/api/threads/${threadId}/messages`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: assistantToDelete.id }),
+      });
+    }
+
+    if (onLocalMessageUpdate) {
       onLocalMessageUpdate((prev) =>
-        prev.map((message) =>
-          message.id === editingMessage.id
-            ? { ...message, content: editingMessage.content }
-            : message
-        )
+        prev
+          .map((message) =>
+            message.id === editedId
+              ? { ...message, content: editingMessage.content }
+              : message
+          )
+          .filter((message) =>
+            assistantToDelete ? message.id !== assistantToDelete.id : true
+          )
       );
     }
+
+    setMessages((prev) =>
+      prev
+        .map((message) => {
+          if (message.id !== editedId) {
+            return message;
+          }
+          return {
+            ...message,
+            content: editingMessage.content,
+            parts: [{ type: "text" as const, text: editingMessage.content }],
+          };
+        })
+        .filter((message) =>
+          assistantToDelete ? message.id !== assistantToDelete.id : true
+        )
+    );
+
     setEditingMessage(null);
+    await reload();
   }
 
   async function confirmDeleteMessage(message: { id: string }) {
@@ -224,18 +274,20 @@ function ChatThread({ threadId, initialMessages, onLocalMessageUpdate }: ChatThr
                   }
                 >
                   <div className="flex gap-2 text-[11px] text-gray-400">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditingMessage({
-                          id: message.id,
-                          content: text,
-                        })
-                      }
-                      className="rounded-md border border-gray-800 px-2 py-1 hover:bg-gray-900"
-                    >
-                      Edit
-                    </button>
+                    {message.role === "user" ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditingMessage({
+                            id: message.id,
+                            content: text,
+                          })
+                        }
+                        className="rounded-md border border-gray-800 px-2 py-1 hover:bg-gray-900"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() =>
