@@ -1,28 +1,26 @@
-```mermaid
-erDiagram
-  THREADS {
-    TEXT id PK
-    TEXT title
-    INTEGER created_at
+classDiagram
+  class THREADS {
+    +TEXT id PK
+    +TEXT title
+    +INTEGER created_at
   }
 
-  MESSAGES {
-    TEXT id PK
-    TEXT thread_id FK
-    TEXT role
-    TEXT content
-    INTEGER created_at
+  class MESSAGES {
+    +TEXT id PK
+    +TEXT thread_id FK
+    +TEXT role
+    +TEXT content
+    +INTEGER created_at
   }
 
-  UPLOADS {
-    TEXT id PK
-    TEXT filename
-    TEXT mime_type
-    INTEGER size_bytes
-    TEXT storage_path
-    INTEGER created_at
+  class UPLOADS {
+    +TEXT id PK
+    +TEXT filename
+    +TEXT mime_type
+    +INTEGER size_bytes
+    +TEXT storage_path
+    +INTEGER created_at
   }
 
-  THREADS ||--o{ MESSAGES : has
-  THREADS ||--o{ UPLOADS : has
-```
+  THREADS "1" o-- "*" MESSAGES : has
+  THREADS "1" o-- "*" UPLOADS : has

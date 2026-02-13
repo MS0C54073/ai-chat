@@ -127,111 +127,24 @@ sequenceDiagram
 Below are a few quick diagrams (Mermaid) to illustrate the system structure, runtime flow, and DB schema. You can render these in any Markdown viewer that supports Mermaid.
 
 **UML: Class Diagram**
+![Class Diagram](public/diagrams/class-diagram.svg)
 
-```mermaid
-classDiagram
-  class Thread {
-    +String id PK
-    +String title
-    +Integer created_at  "unix epoch ms"
-  }
-
-  class Message {
-    +String id PK
-    +String thread_id FK
-    +String role
-    +String content
-    +Integer created_at  "unix epoch ms"
-  }
-
-  class Upload {
-    +String id PK
-    +String filename
-    +String mime_type
-    +Integer size_bytes
-    +String storage_path
-    +Integer created_at
-  }
-
-  Thread "1" o-- "*" Message : contains
-  Thread "1" o-- "*" Upload : related
-```
+Mermaid source: [docs/diagrams/class-diagram.mmd](docs/diagrams/class-diagram.mmd)
 
 **UML: Component Diagram (high-level)**
+![Component Diagram](public/diagrams/component-diagram.svg)
 
-```mermaid
-flowchart TB
-  subgraph Client
-    ChatPage[ChatPage]
-  end
-
-  subgraph Server
-    API[/api/chat]
-    Tools[Generative Tools]
-  end
-
-  subgraph Infra
-    DB[(SQLite)]
-    AI[(OpenAI)]
-  end
-
-  ChatPage -->|HTTP/WS| API
-  API --> DB
-  API --> AI
-  API --> Tools
-  Tools --> DB
-```
+Mermaid source: [docs/diagrams/component-diagram.mmd](docs/diagrams/component-diagram.mmd)
 
 **Flowchart: Request / Response Flow**
+![Request/Response Flow](public/diagrams/flowchart.svg)
 
-```mermaid
-flowchart LR
-  UI[Chat UI]
-  API[/api/chat]
-  DB[(SQLite DB)]
-  AI[OpenAI]
-  TOOLS[Tools (XLSX, Confirm, Table Modal)]
-
-  UI -->|send message| API
-  API -->|persist user message| DB
-  API -->|stream request| AI
-  AI -->|streamed tokens| API
-  API -->|stream to client| UI
-  API -->|save assistant message| DB
-  UI -->|tool trigger| TOOLS
-  TOOLS -->|read/write| DB
-```
+Mermaid source: [docs/diagrams/flowchart.mmd](docs/diagrams/flowchart.mmd)
 
 **ERD: Database Schema (SQLite)**
+![DB ERD](public/diagrams/erd.svg)
 
-```mermaid
-erDiagram
-  THREADS {
-    TEXT id PK
-    TEXT title
-    INTEGER created_at
-  }
-
-  MESSAGES {
-    TEXT id PK
-    TEXT thread_id FK
-    TEXT role
-    TEXT content
-    INTEGER created_at
-  }
-
-  UPLOADS {
-    TEXT id PK
-    TEXT filename
-    TEXT mime_type
-    INTEGER size_bytes
-    TEXT storage_path
-    INTEGER created_at
-  }
-
-  THREADS ||--o{ MESSAGES : has
-  THREADS ||--o{ UPLOADS : has
-```
+Mermaid source: [docs/diagrams/erd.mmd](docs/diagrams/erd.mmd)
 
 Mermaid source files for these diagrams are available in `docs/diagrams/`.
 

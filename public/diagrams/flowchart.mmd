@@ -1,10 +1,9 @@
-```mermaid
-flowchart LR
+graph LR
   UI[Chat UI]
-  API[/api/chat]
-  DB[(SQLite DB)]
-  AI[OpenAI]
-  TOOLS[Tools (XLSX, Confirm, Table Modal)]
+  API["/api/chat"]
+  DB["SQLite DB"]
+  AI["OpenAI"]
+  TOOLS["Tools: XLSX, Confirm, Table Modal"]
 
   UI -->|send message| API
   API -->|persist user message| DB
@@ -14,4 +13,3 @@ flowchart LR
   API -->|save assistant message| DB
   UI -->|tool trigger| TOOLS
   TOOLS -->|read/write| DB
-```

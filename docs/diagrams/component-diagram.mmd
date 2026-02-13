@@ -1,17 +1,16 @@
-```mermaid
-flowchart TB
+graph TB
   subgraph Client
     ChatPage[ChatPage]
   end
 
   subgraph Server
-    API[/api/chat]
-    Tools[Generative Tools]
+    API["/api/chat"]
+    Tools["Generative Tools"]
   end
 
   subgraph Infra
-    DB[(SQLite)]
-    AI[(OpenAI)]
+    DB["SQLite"]
+    AI["OpenAI"]
   end
 
   ChatPage -->|HTTP/WS| API
@@ -19,4 +18,3 @@ flowchart TB
   API --> AI
   API --> Tools
   Tools --> DB
-```
