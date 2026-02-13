@@ -1,0 +1,28 @@
+```mermaid
+classDiagram
+  class Thread {
+    +String id PK
+    +String title
+    +Integer created_at  "unix epoch ms"
+  }
+
+  class Message {
+    +String id PK
+    +String thread_id FK
+    +String role
+    +String content
+    +Integer created_at  "unix epoch ms"
+  }
+
+  class Upload {
+    +String id PK
+    +String filename
+    +String mime_type
+    +Integer size_bytes
+    +String storage_path
+    +Integer created_at
+  }
+
+  Thread "1" o-- "*" Message : contains
+  Thread "1" o-- "*" Upload : related
+```

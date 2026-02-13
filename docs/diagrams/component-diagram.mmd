@@ -1,0 +1,22 @@
+```mermaid
+flowchart TB
+  subgraph Client
+    ChatPage[ChatPage]
+  end
+
+  subgraph Server
+    API[/api/chat]
+    Tools[Generative Tools]
+  end
+
+  subgraph Infra
+    DB[(SQLite)]
+    AI[(OpenAI)]
+  end
+
+  ChatPage -->|HTTP/WS| API
+  API --> DB
+  API --> AI
+  API --> Tools
+  Tools --> DB
+```

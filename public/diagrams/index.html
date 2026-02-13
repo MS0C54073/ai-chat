@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Diagrams</title>
+    <style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:24px}</style>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: false, theme: 'default' });
+
+      async function renderAll() {
+        const files = ['class-diagram.mmd','component-diagram.mmd','flowchart.mmd','erd.mmd'];
+        const container = document.getElementById('diagrams');
+        for (const f of files) {
+          const res = await fetch(f);
+          const text = await res.text();
+          const wrapper = document.createElement('div');
+          wrapper.className = 'mermaid';
+          wrapper.textContent = text.replace(/^```mermaid\n|\n```$/g, '');
+          container.appendChild(wrapper);
+          try { await mermaid.run({ querySelector: wrapper }); } catch (e) { console.error(e); }
+        }
+      }
+
+      window.addEventListener('DOMContentLoaded', renderAll);
+    </script>
+  </head>
+  <body>
+    <h1>Project Diagrams</h1>
+    <p>Rendered from the Mermaid source files in this folder.</p>
+    <div id="diagrams"></div>
+    <p style="margin-top:24px">Tip: use the <code>render:diagrams</code> npm script to export SVG/PNG locally.</p>
+  </body>
+</html>

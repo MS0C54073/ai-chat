@@ -1,0 +1,17 @@
+```mermaid
+flowchart LR
+  UI[Chat UI]
+  API[/api/chat]
+  DB[(SQLite DB)]
+  AI[OpenAI]
+  TOOLS[Tools (XLSX, Confirm, Table Modal)]
+
+  UI -->|send message| API
+  API -->|persist user message| DB
+  API -->|stream request| AI
+  AI -->|streamed tokens| API
+  API -->|stream to client| UI
+  API -->|save assistant message| DB
+  UI -->|tool trigger| TOOLS
+  TOOLS -->|read/write| DB
+```

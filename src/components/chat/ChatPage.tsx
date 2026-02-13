@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useChat, type Message as AiMessage } from "@ai-sdk/react";
 import ThreadsSidebar, {
   type Thread as SidebarThread,
@@ -79,6 +79,9 @@ function ChatThread({
       );
     },
   });
+
+  const keyboardSubmitRef = useRef(false);
+  const [showKeyboardToast, setShowKeyboardToast] = useState(false);
 
   const [editingMessage, setEditingMessage] = useState<{
     id: string;
@@ -230,9 +233,25 @@ function ChatThread({
     setAttachedFiles((prev) => prev.filter((file) => file.id !== id));
   }
 
+  // Refs for scrolling and form submission via keyboard
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  // Auto-scroll to the bottom when messages change or while loading new assistant tokens
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    // Smooth scroll to bottom
+    try {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    } catch {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [messages, isLoading]);
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
+      <div ref={messagesContainerRef} className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
         {messages.length === 0 ? (
           <div className="rounded-md border border-dashed border-gray-800 px-4 py-6 text-center text-sm text-gray-400">
             Start the conversation by sending a message.
@@ -364,10 +383,19 @@ function ChatThread({
         ) : null}
       </div>
       <form
+        ref={formRef}
         onSubmit={(event) => {
           setChatError(null);
-          setAttachedFiles([]);
+          const wasKeyboard = keyboardSubmitRef.current;
+          keyboardSubmitRef.current = false;
+          // Submit while attached files are still present so fileIds are included
           handleSubmit(event);
+          // Clear attached files after submitting
+          setAttachedFiles([]);
+          if (wasKeyboard) {
+            setShowKeyboardToast(true);
+            window.setTimeout(() => setShowKeyboardToast(false), 1400);
+          }
         }}
         className="border-t border-gray-900 bg-gray-950 px-6 py-4"
       >
@@ -377,6 +405,16 @@ function ChatThread({
             onChange={handleInputChange}
             placeholder="Send a message..."
             className="min-h-[44px] flex-1 resize-none rounded-xl border border-gray-800 bg-gray-900 px-4 py-2 text-sm text-gray-100 outline-none focus:border-gray-600"
+            rows={1}
+            onKeyDown={(e) => {
+              // Enter to submit (without Shift). Preserve Shift+Enter for newline.
+              if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                e.preventDefault();
+                // Mark keyboard submit and trigger the form onSubmit handler
+                keyboardSubmitRef.current = true;
+                formRef.current?.requestSubmit();
+              }
+            }}
             rows={1}
           />
           <button

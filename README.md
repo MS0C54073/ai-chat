@@ -62,7 +62,6 @@ A simplified ChatGPT-like interface with conversation threads, message persisten
 - Edit prompts and regenerate response (deletes later messages).
 - Delete prompts/responses with confirmation modal.
 - File uploads with context injection.
-- Playwright e2e test (smoke test for UI load).
 
 **Partially implemented**
 - Generative UI tool rendering (confirm card is wired; other tool UIs are basic).
@@ -122,3 +121,139 @@ sequenceDiagram
   API-->>UI: text stream response
   API->>DB: save assistant message (onFinish)
 ```
+
+## Architecture Diagrams
+
+Below are a few quick diagrams (Mermaid) to illustrate the system structure, runtime flow, and DB schema. You can render these in any Markdown viewer that supports Mermaid.
+
+**UML: Class Diagram**
+
+```mermaid
+classDiagram
+  class Thread {
+    +String id PK
+    +String title
+    +Integer created_at  "unix epoch ms"
+  }
+
+  class Message {
+    +String id PK
+    +String thread_id FK
+    +String role
+    +String content
+    +Integer created_at  "unix epoch ms"
+  }
+
+  class Upload {
+    +String id PK
+    +String filename
+    +String mime_type
+    +Integer size_bytes
+    +String storage_path
+    +Integer created_at
+  }
+
+  Thread "1" o-- "*" Message : contains
+  Thread "1" o-- "*" Upload : related
+```
+
+**UML: Component Diagram (high-level)**
+
+```mermaid
+flowchart TB
+  subgraph Client
+    ChatPage[ChatPage]
+  end
+
+  subgraph Server
+    API[/api/chat]
+    Tools[Generative Tools]
+  end
+
+  subgraph Infra
+    DB[(SQLite)]
+    AI[(OpenAI)]
+  end
+
+  ChatPage -->|HTTP/WS| API
+  API --> DB
+  API --> AI
+  API --> Tools
+  Tools --> DB
+```
+
+**Flowchart: Request / Response Flow**
+
+```mermaid
+flowchart LR
+  UI[Chat UI]
+  API[/api/chat]
+  DB[(SQLite DB)]
+  AI[OpenAI]
+  TOOLS[Tools (XLSX, Confirm, Table Modal)]
+
+  UI -->|send message| API
+  API -->|persist user message| DB
+  API -->|stream request| AI
+  AI -->|streamed tokens| API
+  API -->|stream to client| UI
+  API -->|save assistant message| DB
+  UI -->|tool trigger| TOOLS
+  TOOLS -->|read/write| DB
+```
+
+**ERD: Database Schema (SQLite)**
+
+```mermaid
+erDiagram
+  THREADS {
+    TEXT id PK
+    TEXT title
+    INTEGER created_at
+  }
+
+  MESSAGES {
+    TEXT id PK
+    TEXT thread_id FK
+    TEXT role
+    TEXT content
+    INTEGER created_at
+  }
+
+  UPLOADS {
+    TEXT id PK
+    TEXT filename
+    TEXT mime_type
+    INTEGER size_bytes
+    TEXT storage_path
+    INTEGER created_at
+  }
+
+  THREADS ||--o{ MESSAGES : has
+  THREADS ||--o{ UPLOADS : has
+```
+
+Mermaid source files for these diagrams are available in `docs/diagrams/`.
+
+If you'd like, I can:
+- export these diagrams to PNG/SVG files and add them to `public/` for visual embedding,
+- refine class/ERD fields to match the actual schema in `src/lib/db`, or
+- add a dedicated `docs/diagrams` folder with rendered assets.
+
+### Developer Notes / Recent Changes
+
+- Keyboard send: pressing Enter in the chat input now submits the message (use Shift+Enter for a newline). The messages view auto-scrolls to show new messages.
+- Visual cue: a brief "Sent" toast appears when a message is submitted via the keyboard.
+- File uploads: files attached with the UI are uploaded to `POST /api/uploads` and stored under `./data/uploads`. Text/CSV/JSON uploads are injected into the model context (first ~5k chars); max file size is 5MB. The chat request includes `fileIds` so the server reads and prepends file previews to the model input.
+- Bugfix: attachments are now preserved during submit (they are cleared only after the request is sent), preventing "no file attached" responses.
+- Diagrams viewer: Mermaid sources live in `docs/diagrams/` and are also copied to `public/diagrams/` with a small viewer at `/diagrams/index.html`.
+- Export helper: run `npm run render:diagrams` to export SVGs from `docs/diagrams` into `public/diagrams` using `@mermaid-js/mermaid-cli`.
+
+Quick test checklist:
+
+1. Start the dev server: `bun dev` (or `npm run dev`).
+2. In the UI attach a text/CSV/JSON file via the "Attach file" button.
+3. Type a prompt asking for a summary and press Enter to send.
+4. Confirm the assistant's response references the uploaded file content and the "Sent" toast appears.
+
+
